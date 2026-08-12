@@ -1,29 +1,392 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Dorker</title>
-</head>
-<body>
-    <h1>Google Dorker</h1>
-    <p>Tool untuk membantu membuat pencarian Google secara terstruktur.</p>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google Dorker</title>
 
-    <input type="text" id="keyword" placeholder="Masukkan kata kunci">
-    <button onclick="searchGoogle()">Cari di Google</button>
+<style>
+    * {
+        box-sizing: border-box;
+    }
 
-    <script>
-        function searchGoogle() {
-            const keyword = document.getElementById("keyword").value.trim();
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background: #0f1724;
+        color: #f1f5f9;
+        font-family: Arial, Helvetica, sans-serif;
+    }
 
-            if (!keyword) {
-                alert("Masukkan kata kunci terlebih dahulu.");
-                return;
-            }
+    .container {
+        width: min(760px, 92%);
+        margin: 0 auto;
+        padding: 28px 0 70px;
+    }
 
-            const query = encodeURIComponent(keyword);
-            window.open("https://www.google.com/search?q=" + query, "_blank");
+    .header {
+        text-align: center;
+    }
+
+    .title {
+        font-size: 38px;
+        font-weight: 700;
+        margin: 0 0 18px;
+    }
+
+    .title span {
+        font-size: 38px;
+    }
+
+    .description {
+        color: #8f98a8;
+        font-size: 16px;
+        line-height: 1.5;
+        max-width: 650px;
+        margin: auto;
+    }
+
+    .search-area {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+    }
+
+    #domain {
+        flex: 1;
+        height: 50px;
+        border: 2px solid #4c8dff;
+        border-radius: 7px;
+        padding: 0 13px;
+        font-size: 16px;
+        outline: none;
+    }
+
+    #domain:focus {
+        box-shadow: 0 0 5px #4c8dff;
+    }
+
+    button {
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .generate {
+        width: 115px;
+        background: #2867df;
+        color: white;
+    }
+
+    .generate:hover,
+    .copy:hover {
+        background: #3579f0;
+    }
+
+    .clear-area {
+        text-align: center;
+        margin: 22px 0 14px;
+    }
+
+    .clear {
+        background: #e5222b;
+        color: white;
+        padding: 11px 22px;
+    }
+
+    .clear:hover {
+        background: #c91922;
+    }
+
+    #results {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .dork {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 52px;
+        padding: 8px 10px;
+        background: #202b3b;
+        border-radius: 4px;
+        transition: .15s;
+    }
+
+    .dork:hover {
+        background: #2a374a;
+    }
+
+    .dork input {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+    }
+
+    .query {
+        flex: 1;
+        color: #4d9aff;
+        font-size: 15px;
+        word-break: break-word;
+    }
+
+    .copy {
+        background: #2867df;
+        color: white;
+        padding: 8px 14px;
+        min-width: 55px;
+    }
+
+    .status {
+        text-align: center;
+        color: #7f8a9c;
+        font-size: 13px;
+        margin-top: 12px;
+    }
+
+    footer {
+        position: fixed;
+        bottom: 10px;
+        left: 0;
+        width: 100%;
+        text-align: center;
+        color: #596579;
+        font-size: 13px;
+    }
+
+    footer span {
+        color: #ef3340;
+    }
+
+    @media (max-width: 600px) {
+        .title {
+            font-size: 30px;
         }
-    </script>
+
+        .search-area {
+            flex-direction: column;
+        }
+
+        .generate {
+            width: 100%;
+            height: 45px;
+        }
+
+        .dork {
+            align-items: flex-start;
+        }
+
+        .copy {
+            align-self: center;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1 class="title">🔎 Google Dorker</h1>
+
+        <p class="description">
+            Enter a target domain or subdomain (e.g. example.com) and generate
+            Google dorks for authorized security testing.
+            Progress is saved automatically!
+        </p>
+    </div>
+
+    <div class="search-area">
+        <input
+            type="text"
+            id="domain"
+            placeholder="Enter target domain (e.g. example.com)"
+        >
+
+        <button class="generate" onclick="generateDorks()">
+            Generate
+        </button>
+    </div>
+
+    <div class="clear-area">
+        <button class="clear" onclick="clearProgress()">
+            🧹 Clear Progress
+        </button>
+    </div>
+
+    <div id="results"></div>
+
+    <div id="status" class="status"></div>
+
+</div>
+
+<footer>
+    Made with <span>♥</span> by Google Dorker |
+    <a href="https://github.com/" target="_blank" style="color:#4d9aff;text-decoration:none;">
+        Visit Us
+    </a>
+</footer>
+
+<script>
+
+const templates = [
+    'site:{domain} filetype:pdf',
+    'site:{domain} filetype:doc',
+    'site:{domain} filetype:docx',
+    'site:{domain} filetype:xls',
+    'site:{domain} filetype:xlsx',
+    'site:{domain} filetype:ppt',
+    'site:{domain} filetype:pptx',
+    'site:{domain} inurl:login',
+    'site:{domain} inurl:portal',
+    'site:{domain} intitle:"index of"',
+    'site:{domain} "contact"',
+    'site:{domain} "about"',
+    'site:{domain} "privacy policy"',
+    'site:{domain} "terms of service"'
+];
+
+function cleanDomain(value) {
+    return value
+        .trim()
+        .replace(/^https?:\/\//i, '')
+        .replace(/^www\./i, '')
+        .split('/')[0];
+}
+
+function generateDorks() {
+
+    const input = document.getElementById("domain");
+    const domain = cleanDomain(input.value);
+
+    if (!domain) {
+        alert("Masukkan target domain terlebih dahulu.");
+        input.focus();
+        return;
+    }
+
+    input.value = domain;
+
+    const results = document.getElementById("results");
+
+    results.innerHTML = "";
+
+    templates.forEach((template, index) => {
+
+        const query = template.replace("{domain}", domain);
+
+        const row = document.createElement("div");
+        row.className = "dork";
+
+        row.innerHTML = `
+            <input type="checkbox" id="check-${index}">
+            <div class="query">${escapeHTML(query)}</div>
+            <button class="copy" onclick="copyQuery('${escapeJS(query)}', this)">
+                Copy
+            </button>
+        `;
+
+        results.appendChild(row);
+    });
+
+    localStorage.setItem("googleDorkerDomain", domain);
+
+    document.getElementById("status").textContent =
+        templates.length + " dork generated.";
+
+    saveChecks();
+}
+
+function copyQuery(query, button) {
+
+    navigator.clipboard.writeText(query);
+
+    const oldText = button.textContent;
+    button.textContent = "Copied!";
+
+    setTimeout(() => {
+        button.textContent = oldText;
+    }, 1000);
+}
+
+function clearProgress() {
+
+    localStorage.removeItem("googleDorkerDomain");
+    localStorage.removeItem("googleDorkerChecks");
+
+    document.getElementById("domain").value = "";
+    document.getElementById("results").innerHTML = "";
+    document.getElementById("status").textContent = "";
+
+}
+
+function saveChecks() {
+
+    const checks = [];
+
+    document.querySelectorAll(".dork input").forEach((box, index) => {
+        checks[index] = box.checked;
+    });
+
+    localStorage.setItem(
+        "googleDorkerChecks",
+        JSON.stringify(checks)
+    );
+}
+
+function loadProgress() {
+
+    const domain = localStorage.getItem("googleDorkerDomain");
+
+    if (domain) {
+        document.getElementById("domain").value = domain;
+        generateDorks();
+
+        const saved = JSON.parse(
+            localStorage.getItem("googleDorkerChecks") || "[]"
+        );
+
+        document.querySelectorAll(".dork input").forEach((box, index) => {
+            box.checked = saved[index] || false;
+        });
+    }
+}
+
+document.addEventListener("change", function(event) {
+
+    if (event.target.matches(".dork input")) {
+        saveChecks();
+    }
+
+});
+
+function escapeHTML(text) {
+
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function escapeJS(text) {
+
+    return text
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"');
+}
+
+loadProgress();
+
+</script>
+
 </body>
 </html>
