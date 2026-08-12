@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Dorker</title>
+</head>
+<body>
+    <h1>Google Dorker</h1>
+    <p>Tool untuk membantu membuat pencarian Google secara terstruktur.</p>
+
+    <input type="text" id="keyword" placeholder="Masukkan kata kunci">
+    <button onclick="searchGoogle()">Cari di Google</button>
+
+    <script>
+        function searchGoogle() {
+            const keyword = document.getElementById("keyword").value.trim();
+
+            if (!keyword) {
+                alert("Masukkan kata kunci terlebih dahulu.");
+                return;
+            }
+
+            const query = encodeURIComponent(keyword);
+            window.open("https://www.google.com/search?q=" + query, "_blank");
+        }
+    </script>
+</body>
+</html>
